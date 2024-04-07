@@ -1,0 +1,26 @@
+https://github.com/grafana/loki/issues/9392
+
+1.https://github.com/grafana/loki/releases/download/v2.8.1/promtail-windows-amd64.exe.zip
+
+2.$windows_dir = "c:\promtail\"
+
+3.New-Service -Name "Promtail" -BinaryPathName "C:\promtail\\promtail-windows-amd64.exe --config.file=promtail-local-config.yaml"
+
+4.Remove-Service -Name "Promtail"
+
+
+--------
+1.Download NSSM and set Env vars
+
+2.nssm version
+3.Install Promtail using NSSM
+nssm install promtail
+nssm start promtail
+nssm stop promtail
+
+4.Remove promtail
+nssm remove Promtail confirm
+
+
+
+

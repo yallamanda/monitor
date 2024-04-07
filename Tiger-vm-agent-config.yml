@@ -1,0 +1,103 @@
+integrations:
+  windows_exporter:
+    enabled: true
+    instance: ZWEITIGRWVP001 # must match instance used in logs
+    relabel_configs:
+    - target_label: job
+      replacement: 'integrations/windows_exporter_tiger_prod' # must match job used in logs
+server:
+  log_level: info
+logs:
+  configs:
+    - name: Grafana_Cloud_Logging
+      target_config:
+        sync_period: 10s
+      positions:
+        filename: 'D:\Grafana-Agent\positions.yaml'
+      clients:
+        - url: "https://372417:glc_eyJvIjoiNzgzMzg0IiwibiI6InRpZ2VyLXFhLWNvbnRhaW5lci10ZWxlbWV0cnktY29sbGVjdG9yIiwiayI6IjFMNE1oM2E5clIxNTZUVEp0NjBQMUxlbyIsIm0iOnsiciI6InVzIn19@logs-prod-017.grafana.net/loki/api/v1/push"
+      external_labels:
+        environment: prod
+        servername: ZWEITIGRWVP001
+        application: Tiger
+        groups: Tiger_vm_web
+      scrape_configs:
+        - job_name: application-logs
+          static_configs:
+            - targets:
+                - ZWEITIGRWVP001
+              labels:
+                __path__: D:\pwc-tiger\**\*.log
+                eventlogtype: vialto-tiger
+          relabel_configs: []
+          pipeline_stages:
+            - match:
+                selector: '{eventlogtype="vialto-tiger"}'
+                stages:
+                  - multiline:
+                      firstline: '^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}.\d{3}'
+                  - regex:
+                      expression: '^(?P<time>\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}.\d{3})(?P<message>(?s:.*))$'
+                  - timestamp:
+                      source: time
+                      format: '2006/01/02 03:04:05.000'
+                  - output:
+                      source: message
+
+        - job_name: tiger-event-application-logs
+          windows_events:
+            bookmark_path: D:\Grafana-Agent\bookmarks-Application.xml
+            use_incoming_timestamp: true
+            eventlog_name: Application
+          relabel_configs: []
+          pipeline_stages:
+            - static_labels:
+                eventlogtype: eventlog
+                level: unknown
+            - json:
+                expression:
+                  level: levelText
+
+        - job_name: tiger-iis-logs
+          static_configs:
+            - targets:
+                - ZWEITIGRWVP001
+              labels:
+                __path__: C:\inetpub\logs\LogFiles\**\*.log
+          relabel_configs: []
+          pipeline_stages:
+            - static_labels:
+                eventlogtype: IIS
+                level: info
+            - regex:
+                expression: (?:[^ ]+ ){3}(?P<request_method>[^ ]+) (?:[^ ]+ ){10}(?P<response_code>[^ ]+)
+            - labels:
+                request_method:
+                response_code:
+            - labelallow:
+                - eventlogtype
+                - level
+                - request_method
+                - response_code
+
+traces:
+  configs:
+    - name: Grafana_Cloud_Tracing
+      attributes:
+        actions:
+          - key: environment
+            action: upsert
+            value: "prod"
+          - key: agent_hostname
+            action: upsert
+            value: ZWEITIGRWVP001
+      remote_write:
+        - endpoint: "tempo-us-central1.grafana.net:443"
+          basic_auth:
+            username: "368930"
+            password: "glc_eyJvIjoiNzgzMzg0IiwibiI6InRpZ2VyLXFhLWNvbnRhaW5lci10ZWxlbWV0cnktY29sbGVjdG9yIiwiayI6IjFMNE1oM2E5clIxNTZUVEp0NjBQMUxlbyIsIm0iOnsiciI6InVzIn19"
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+            http:

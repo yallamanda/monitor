@@ -1,0 +1,6 @@
+1. File Uploads/Downloads - User Notifications
+2. Task notifications - Part of task setup - Can service now create incidents if we send email to service now group
+3. Infra Monitoring - Dashboards and monitoring in place. Need to confirm if we get incidents created automatically
+4. Services monitoring in VM
+5. Port connections monitoring
+
